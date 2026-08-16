@@ -1,4 +1,4 @@
-# NextTabletDriver — Website
+# NextTabletDriver Website
 
 The landing page for [NextTabletDriver](https://github.com/Next-Tablet-Driver/NextTabletDriver), a Rust-native, low-latency tablet driver for Windows and Linux. Built with Astro, Tailwind CSS, and GSAP.
 
