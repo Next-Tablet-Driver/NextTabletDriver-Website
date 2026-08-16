@@ -1,11 +1,65 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import ActiveAreaMapper from '../components/ActiveAreaMapper.astro';
+import Features from '../components/Features.astro';
+import SupportedTablets from '../components/SupportedTablets.astro';
+import Download from '../components/Download.astro';
+import OpenSource from '../components/OpenSource.astro';
+import Footer from '../components/Footer.astro';
+import { getGithubData } from '../lib/github';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const data = await getGithubData();
 ---
 
 <Layout>
-	<Welcome />
+	<Header />
+	<main>
+		<Hero data={data} />
+		<ActiveAreaMapper />
+		<Features />
+		<SupportedTablets />
+		<Download data={data} />
+		<OpenSource data={data} />
+	</main>
+	<Footer />
 </Layout>
+
+<script>
+	import { gsap, prefersReducedMotion } from '../lib/motion';
+
+	const targets = gsap.utils.toArray<HTMLElement>('[data-reveal]');
+
+	if (prefersReducedMotion()) {
+		gsap.set(targets, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' });
+	} else {
+		// Group elements that share a parent section so they stagger together
+		// instead of each firing its own isolated tween.
+		const groups = new Map<Element, HTMLElement[]>();
+		targets.forEach((el) => {
+			const section = el.closest('section') ?? document.body;
+			const list = groups.get(section) ?? [];
+			list.push(el);
+			groups.set(section, list);
+		});
+
+		groups.forEach((els) => {
+			gsap.set(els, { opacity: 0, y: 28, scale: 0.96, filter: 'blur(8px)' });
+			gsap.to(els, {
+				opacity: 1,
+				y: 0,
+				scale: 1,
+				filter: 'blur(0px)',
+				duration: 0.9,
+				ease: 'power3.out',
+				stagger: 0.1,
+				scrollTrigger: {
+					trigger: els[0],
+					start: 'top 85%',
+					once: true,
+				},
+			});
+		});
+	}
+</script>

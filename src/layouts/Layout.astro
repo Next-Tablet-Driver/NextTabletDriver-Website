@@ -1,23 +1,82 @@
+---
+import '../styles/global.css';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const {
+	title = 'NextTabletDriver: a faster, quieter tablet driver',
+	description = 'A modern, low-latency tablet driver for Windows and Linux. Open source, Rust-native, and built for precision.',
+} = Astro.props;
+
+const posthogKey = import.meta.env.PUBLIC_POSTHOG_KEY;
+---
+
 <!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		<link rel="icon" href="/favicon.ico" sizes="any" />
+		<link rel="canonical" href={new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)} />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta name="twitter:card" content="summary_large_image" />
+
+		<meta name="theme-color" content="#fafaf8" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#0a0a09" media="(prefers-color-scheme: dark)" />
+
+		<script is:inline>
+			(function () {
+				try {
+					var stored = localStorage.getItem('theme');
+					var theme =
+						stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+					document.documentElement.setAttribute('data-theme', theme);
+				} catch (e) {}
+			})();
+		</script>
 	</head>
 	<body>
 		<slot />
+
+		{
+			posthogKey && (
+				<script>
+					import posthog from 'posthog-js';
+
+					posthog.init(import.meta.env.PUBLIC_POSTHOG_KEY, {
+						api_host: import.meta.env.PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com',
+						person_profiles: 'identified_only',
+						capture_pageview: true,
+					});
+				</script>
+			)
+		}
+
+		<script>
+			import Lenis from 'lenis';
+			import { gsap, ScrollTrigger, prefersReducedMotion } from '../lib/motion';
+
+			if (!prefersReducedMotion()) {
+				const headerOffset = document.querySelector('header')?.getBoundingClientRect().height ?? 0;
+				const lenis = new Lenis({ anchors: { offset: -headerOffset } });
+
+				lenis.on('scroll', ScrollTrigger.update);
+
+				gsap.ticker.add((time) => {
+					lenis.raf(time * 1000);
+				});
+				gsap.ticker.lagSmoothing(0);
+			}
+		</script>
 	</body>
 </html>
-
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>

@@ -1,0 +1,17 @@
+# NOTE: this workflow only does something useful if it lives in the DRIVER repo
+# (Next-Tablet-Driver/NextTabletDriver), since it needs to fire on *that* repo's
+# releases to trigger a landing-site rebuild that picks up the new assets.
+# Copy this file to that repo's .github/workflows/ and add a VERCEL_DEPLOY_HOOK_URL
+# secret there (Vercel project settings -> Git -> Deploy Hooks).
+name: Notify Vercel of new release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel deploy hook
+        run: curl -fsS -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"

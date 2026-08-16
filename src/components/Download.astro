@@ -1,0 +1,258 @@
+---
+import type { GithubData } from '../lib/github';
+import { formatBytes } from '../lib/github';
+
+interface Props {
+	data: GithubData;
+}
+
+const { data } = Astro.props;
+const { release } = data;
+
+const publishedDate = release.publishedAt
+	? new Date(release.publishedAt).toLocaleDateString('en-US', {
+			year: 'numeric',
+			month: 'long',
+			day: 'numeric',
+		})
+	: null;
+
+const defaultOS: 'windows' | 'linux' | null = release.windows ? 'windows' : release.linux ? 'linux' : null;
+const panelClass = (id: string) =>
+	id === defaultOS ? 'flex flex-col items-center gap-3' : 'hidden flex-col items-center gap-3';
+---
+
+<section id="download" class="border-t border-border px-6 py-24">
+	<div class="mx-auto max-w-2xl text-center">
+		<p class="font-mono text-xs tracking-widest text-fg-muted uppercase" data-reveal>Download</p>
+		<h2 class="font-display mt-4 text-3xl font-medium tracking-tight text-fg sm:text-4xl" data-reveal>
+			Get the latest build.
+		</h2>
+		<p class="mt-2 font-mono text-xs text-fg-muted" data-reveal>
+			{[release.version ? `v${release.version}` : 'Latest release', publishedDate && `Published ${publishedDate}`]
+				.filter(Boolean)
+				.join(' · ')}
+		</p>
+
+		<div class="mt-10 rounded-2xl border border-border bg-surface p-8" data-reveal>
+			{
+				(release.windows || release.linux) && (
+					<div class="inline-flex rounded-full border border-border p-1">
+						{release.windows && (
+							<button
+								type="button"
+								data-os-tab="windows"
+								class="os-tab flex items-center gap-2 rounded-full px-5 py-2 text-sm transition-colors"
+								aria-pressed={defaultOS === 'windows' ? 'true' : 'false'}
+							>
+								<svg viewBox="0 0 24 24" fill="currentColor" class="h-3.5 w-3.5">
+									<path d="M3 5.5 10.5 4.4V11.5H3ZM11.4 4.3 21 3V11.4H11.4ZM3 12.5H10.5V19.6L3 18.5ZM11.4 12.5H21V21L11.4 19.7Z" />
+								</svg>
+								Windows
+							</button>
+						)}
+						{release.linux && (
+							<button
+								type="button"
+								data-os-tab="linux"
+								class="os-tab flex items-center gap-2 rounded-full px-5 py-2 text-sm transition-colors"
+								aria-pressed={defaultOS === 'linux' ? 'true' : 'false'}
+							>
+								<svg viewBox="0 0 24 24" fill="currentColor" class="h-3.5 w-3.5">
+									<path d="M12 2c1.5 0 2.6 1.4 2.6 3.3 0 1.2-.4 1.9-.9 2.7-.2.3-.1.6.2.7.9.4 2.1 1.6 2.1 3.6 0 .8-.2 1.4-.5 1.9.5.3.9.9.9 1.7 0 1.6-1.9 3-4.6 3H12c-2.7 0-4.6-1.4-4.6-3 0-.8.4-1.4.9-1.7-.3-.5-.5-1.1-.5-1.9 0-2 1.2-3.2 2.1-3.6.3-.1.4-.4.2-.7-.5-.8-.9-1.5-.9-2.7C9.2 3.4 10.4 2 12 2Z" />
+								</svg>
+								Linux
+							</button>
+						)}
+					</div>
+				)
+			}
+
+			<div class="mt-8">
+				{
+					release.windows && (
+						<div data-os-panel="windows" class={panelClass('windows')}>
+							<a
+								href={release.windows.primary.url}
+								class="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-medium text-accent-fg transition-transform hover:scale-[1.02]"
+							>
+								Download installer ({formatBytes(release.windows.primary.size)})
+							</a>
+							{release.windows.checksum && (
+								<a
+									href={release.windows.checksum.url}
+									class="font-mono text-xs text-fg-muted underline decoration-border underline-offset-4 hover:text-fg"
+								>
+									SHA-256 checksum
+								</a>
+							)}
+							<div class="mt-2 flex items-center gap-2">
+								<span class="text-xs text-fg-muted">or via Winget</span>
+								<div class="flex items-center gap-2 rounded-full border border-border bg-canvas py-1.5 pr-1.5 pl-4 font-mono text-xs text-fg-muted">
+									<code id="winget-command">winget install iSweat.NextTabletDriver</code>
+									<button
+										id="winget-copy"
+										type="button"
+										aria-label="Copy winget command"
+										class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-fg-muted transition-colors hover:bg-surface hover:text-fg"
+									>
+										<svg
+											id="winget-copy-icon"
+											xmlns="http://www.w3.org/2000/svg"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											stroke-width="1.75"
+											class="h-3.5 w-3.5"
+										>
+											<rect x="9" y="9" width="11" height="11" rx="2" />
+											<path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+										</svg>
+										<svg
+											id="winget-copy-check"
+											xmlns="http://www.w3.org/2000/svg"
+											viewBox="0 0 24 24"
+											fill="none"
+											stroke="currentColor"
+											stroke-width="1.75"
+											class="hidden h-3.5 w-3.5"
+										>
+											<path stroke-linecap="round" stroke-linejoin="round" d="m5 13 4 4L19 7" />
+										</svg>
+									</button>
+								</div>
+							</div>
+						</div>
+					)
+				}
+				{
+					release.linux && (
+						<div data-os-panel="linux" class={panelClass('linux')}>
+							<a
+								href={release.linux.primary.url}
+								class="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-medium text-accent-fg transition-transform hover:scale-[1.02]"
+							>
+								Download {release.linux.primary.name.endsWith('.deb') ? '.deb' : 'AppImage'} (
+								{formatBytes(release.linux.primary.size)})
+							</a>
+							<div class="flex gap-4 font-mono text-xs text-fg-muted">
+								{release.linux.checksum && (
+									<a
+										href={release.linux.checksum.url}
+										class="underline decoration-border underline-offset-4 hover:text-fg"
+									>
+										SHA-256
+									</a>
+								)}
+								{release.linux.alt && (
+									<a
+										href={release.linux.alt.url}
+										class="underline decoration-border underline-offset-4 hover:text-fg"
+									>
+										.deb package
+									</a>
+								)}
+							</div>
+							<p class="text-xs text-fg-muted">
+								Also on the AUR as <code class="rounded bg-canvas px-1.5 py-0.5 font-mono">nexttabletdriver-git</code>
+							</p>
+						</div>
+					)
+				}
+				{
+					!release.windows && !release.linux && (
+						<p class="text-fg-muted">
+							{release.version === null
+								? "Couldn't reach GitHub to load the latest build. Grab it directly from the releases page."
+								: 'No packaged installer found for this release yet.'}
+						</p>
+					)
+				}
+			</div>
+		</div>
+
+		<a
+			href={release.releaseUrl}
+			target="_blank"
+			rel="noreferrer"
+			class="mt-8 inline-block text-sm text-fg-muted underline decoration-border underline-offset-4 transition-colors hover:text-fg"
+			data-reveal
+		>
+			View all releases and changelogs →
+		</a>
+	</div>
+</section>
+
+<style>
+	.os-tab[aria-pressed='true'] {
+		background: var(--color-accent);
+		color: var(--color-accent-fg);
+	}
+	.os-tab[aria-pressed='false'] {
+		color: var(--color-fg-muted);
+	}
+</style>
+
+<script>
+	import { gsap } from '../lib/motion';
+
+	const tabs = document.querySelectorAll<HTMLButtonElement>('[data-os-tab]');
+	const panels = document.querySelectorAll<HTMLElement>('[data-os-panel]');
+
+	function activate(target: string | undefined, animate: boolean) {
+		if (!target) return;
+		tabs.forEach((t) => t.setAttribute('aria-pressed', String(t.dataset.osTab === target)));
+
+		panels.forEach((panel) => {
+			const isTarget = panel.dataset.osPanel === target;
+			if (!isTarget) {
+				panel.classList.add('hidden');
+				panel.classList.remove('flex');
+				return;
+			}
+			panel.classList.remove('hidden');
+			panel.classList.add('flex');
+			if (animate) {
+				gsap.fromTo(
+					panel,
+					{ opacity: 0, y: 8 },
+					{ opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' },
+				);
+			}
+		});
+	}
+
+	tabs.forEach((tab) => {
+		tab.addEventListener('click', () => activate(tab.dataset.osTab, true));
+	});
+
+	// Android reports "Linux" in its UA too, and must not get the desktop build.
+	const ua = navigator.userAgent;
+	const isLinux = /Linux/.test(ua) && !/Android/.test(ua);
+	const detected = isLinux ? 'linux' : 'windows';
+	if (document.querySelector(`[data-os-tab="${detected}"]`)) {
+		activate(detected, false);
+	}
+</script>
+
+<script>
+	const copyButton = document.getElementById('winget-copy');
+	const command = document.getElementById('winget-command');
+	const icon = document.getElementById('winget-copy-icon');
+	const check = document.getElementById('winget-copy-check');
+
+	copyButton?.addEventListener('click', async () => {
+		if (!command?.textContent) return;
+		try {
+			await navigator.clipboard.writeText(command.textContent);
+			icon?.classList.add('hidden');
+			check?.classList.remove('hidden');
+			setTimeout(() => {
+				icon?.classList.remove('hidden');
+				check?.classList.add('hidden');
+			}, 1500);
+		} catch {
+			// clipboard unavailable, silently ignore
+		}
+	});
+</script>

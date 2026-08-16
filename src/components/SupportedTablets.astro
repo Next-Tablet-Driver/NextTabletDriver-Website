@@ -1,0 +1,132 @@
+---
+import { TABLET_BRANDS } from '../lib/tablets';
+import { TABLETS_URL } from '../lib/github';
+---
+
+<section id="tablets" class="border-t border-border px-6 py-24">
+	<div class="mx-auto max-w-3xl text-center">
+		<p class="font-mono text-xs tracking-widest text-fg-muted uppercase" data-reveal>Tablets</p>
+		<h2 class="font-display mt-4 text-3xl font-medium tracking-tight text-fg sm:text-4xl" data-reveal>
+			Device definitions for the tablets you already own.
+		</h2>
+		<p class="mx-auto mt-4 max-w-xl text-fg-muted" data-reveal>
+			Community-maintained, human-readable JSON. Open a pull request if yours is missing.
+		</p>
+	</div>
+
+	<div class="tablets-marquee relative mt-10 overflow-hidden" data-reveal>
+		{/* Only the first set is authored; the script below clones it as many times as
+		   the current viewport needs to keep the loop seamless. */}
+		<div class="tablets-track flex w-max">
+			<div class="tablets-set flex shrink-0 gap-3 pr-3">
+				{
+					TABLET_BRANDS.map((brand) => (
+						<span class="shrink-0 rounded-full border border-border px-4 py-1.5 text-sm text-fg-muted">
+							{brand}
+						</span>
+					))
+				}
+			</div>
+		</div>
+	</div>
+
+	<div class="mx-auto max-w-3xl text-center">
+		<a
+			href={TABLETS_URL}
+			target="_blank"
+			rel="noreferrer"
+			class="mt-8 inline-block text-sm text-fg-muted underline decoration-border underline-offset-4 transition-colors hover:text-fg"
+			data-reveal
+		>
+			Browse the tablets directory →
+		</a>
+	</div>
+</section>
+
+<style>
+	.tablets-marquee {
+		mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+		-webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+	}
+
+	/* Animation only starts once JS has measured the exact pixel offset (.is-measured added below) —
+	   starting immediately on a fallback value would cause a visible jump the instant JS corrects it. */
+	.tablets-track.is-measured {
+		animation: tablets-scroll 32s linear infinite;
+	}
+
+	.tablets-marquee:hover .tablets-track.is-measured {
+		animation-play-state: paused;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.tablets-track.is-measured {
+			animation: none;
+		}
+	}
+
+	@keyframes tablets-scroll {
+		from {
+			transform: translateX(0);
+		}
+		to {
+			transform: translateX(calc(-1 * var(--set-width)));
+		}
+	}
+</style>
+
+<script>
+	const marquee = document.querySelector<HTMLElement>('.tablets-marquee');
+	const track = document.querySelector<HTMLElement>('.tablets-track');
+	const source = track?.querySelector<HTMLElement>('.tablets-set');
+
+	if (marquee && track && source) {
+		let setWidth = 0;
+
+		// Read the layout width, not getBoundingClientRect(): the scroll-reveal scales an
+		// ancestor of the track, and the keyframes below translate in the track's own
+		// unscaled coordinates, so a screen-space measurement would be off by that factor.
+		const measureSet = () => parseFloat(getComputedStyle(source).width);
+
+		const sync = () => {
+			const width = measureSet();
+			if (!width) return;
+
+			// Once the track has slid a full set to the left, the remaining copies still have
+			// to cover the container — otherwise the loop runs out of pills and leaves a gap.
+			// Hence container/set copies to fill the view, plus the one being scrolled away.
+			const needed = Math.ceil(marquee.clientWidth / width) + 1;
+			const rendered = track.querySelectorAll('.tablets-set').length;
+
+			for (let i = rendered; i < needed; i++) {
+				const clone = source.cloneNode(true) as HTMLElement;
+				clone.setAttribute('aria-hidden', 'true');
+				track.append(clone);
+			}
+			for (let i = rendered; i > needed; i--) {
+				track.lastElementChild?.remove();
+			}
+
+			// Adding or dropping copies leaves the loop distance untouched, so only a real
+			// change in set width restarts the animation — resizing no longer makes it jump.
+			if (Math.abs(width - setWidth) >= 0.5) {
+				setWidth = width;
+				track.style.setProperty('--set-width', `${width}px`);
+				// Force a style flush between removing/re-adding the class so the animation
+				// actually restarts at 0% instead of continuing with a shifted target.
+				track.classList.remove('is-measured');
+				void track.offsetWidth;
+			}
+
+			track.classList.add('is-measured');
+		};
+
+		sync();
+
+		// The container tracks viewport width; the set itself only changes when the webfont
+		// settles or the user zooms.
+		const resizeObserver = new ResizeObserver(sync);
+		resizeObserver.observe(marquee);
+		resizeObserver.observe(source);
+	}
+</script>

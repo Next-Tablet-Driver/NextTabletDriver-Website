@@ -1,0 +1,217 @@
+---
+import type { GithubData } from '../lib/github';
+import { formatBytes, REPO_URL } from '../lib/github';
+import { TABLET_BRANDS } from '../lib/tablets';
+
+interface Props {
+	data: GithubData;
+}
+
+const { data } = Astro.props;
+const { release, repo } = data;
+
+const windowsHref = release.windows?.primary.url;
+const linuxHref = release.linux?.primary.url;
+const primaryHref = windowsHref ?? linuxHref ?? release.releaseUrl;
+const primarySize = release.windows?.primary.size ?? release.linux?.primary.size;
+---
+
+<section id="top" class="relative overflow-hidden px-6 pt-32 pb-24">
+	<div
+		class="pointer-events-none absolute inset-0 -z-10"
+		style="background-image: linear-gradient(to right, var(--color-border) 1px, transparent 1px), linear-gradient(to bottom, var(--color-border) 1px, transparent 1px); background-size: 64px 64px; mask-image: radial-gradient(ellipse 55% 45% at 50% 0%, black 40%, transparent 100%); -webkit-mask-image: radial-gradient(ellipse 55% 45% at 50% 0%, black 40%, transparent 100%);"
+	>
+	</div>
+	<div
+		class="hero-glow pointer-events-none absolute top-0 left-1/2 -z-10 h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-accent/[0.14] blur-[130px]"
+	>
+	</div>
+
+	<div class="pointer-events-none absolute inset-x-0 top-24 flex justify-center">
+		<div class="h-px w-full max-w-md bg-gradient-to-r from-transparent via-border to-transparent"></div>
+	</div>
+
+	<div class="mx-auto max-w-3xl text-center">
+		<p class="hero-fade mb-6 font-mono text-xs tracking-widest text-fg-muted uppercase">
+			Open source · Windows &amp; Linux{release.version ? ` · v${release.version}` : ''}
+		</p>
+
+		<h1
+			class="font-display text-balance text-5xl leading-[1.05] font-medium tracking-tight text-fg sm:text-6xl md:text-7xl"
+		>
+			<span class="block overflow-hidden"
+				><span class="hero-line inline-block">The driver disappears.</span></span
+			>
+			<span class="block overflow-hidden"
+				><span class="hero-line inline-block">Precision doesn't.</span></span
+			>
+		</h1>
+
+		<p class="hero-fade mx-auto mt-6 max-w-xl text-lg text-fg-muted">
+			NextTabletDriver is a Rust-native, low-latency tablet driver for Windows and Linux. Precise
+			area mapping, custom themes, and open source from day one.
+		</p>
+
+		<div class="hero-fade mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+			<a
+				id="hero-download"
+				href={primaryHref}
+				data-windows={windowsHref}
+				data-linux={linuxHref}
+				class="group inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-medium text-accent-fg transition-transform hover:scale-[1.02]"
+			>
+				<span id="hero-download-label">Download for Windows</span>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					class="h-4 w-4 transition-transform group-hover:translate-y-0.5"
+				>
+					<path stroke-linecap="round" stroke-linejoin="round" d="M12 4v14m0 0-5-5m5 5 5-5" />
+				</svg>
+			</a>
+			<a
+				href={REPO_URL}
+				target="_blank"
+				rel="noreferrer"
+				class="text-sm text-fg-muted underline decoration-border underline-offset-4 transition-colors hover:text-fg"
+			>
+				View source on GitHub
+			</a>
+		</div>
+
+		{
+			primarySize && (
+				<p class="mt-4 font-mono text-xs text-fg-muted">{formatBytes(primarySize)} · MIT licensed</p>
+			)
+		}
+	</div>
+
+	<div class="hero-visual relative mx-auto mt-16 max-w-4xl">
+		<div class="absolute inset-x-8 -bottom-6 top-10 -z-10 rounded-2xl bg-accent/10 blur-2xl"></div>
+		<div class="hero-visual-parallax overflow-hidden rounded-xl border border-border bg-surface">
+			<img
+				id="hero-image"
+				src="/image.png"
+				data-src-dark="/image.png"
+				data-src-light="/image_white.png"
+				alt="NextTabletDriver desktop app showing display target selection and tablet active-area mapping"
+				width="1002"
+				height="882"
+				class="block w-full"
+			/>
+		</div>
+	</div>
+
+	<div
+		class="hero-fade mx-auto mt-14 grid max-w-3xl grid-cols-2 gap-8 border-y border-border py-8 text-center sm:grid-cols-4"
+	>
+		<div>
+			<p class="font-mono text-2xl text-fg">2</p>
+			<p class="mt-1 text-xs text-fg-muted">Platforms</p>
+		</div>
+		<div>
+			<p class="font-mono text-2xl text-fg">{TABLET_BRANDS.length}+</p>
+			<p class="mt-1 text-xs text-fg-muted">Tablet brands</p>
+		</div>
+		<div>
+			<p class="font-mono text-2xl text-fg">MIT</p>
+			<p class="mt-1 text-xs text-fg-muted">License</p>
+		</div>
+		<div>
+			<p class="font-mono text-2xl text-fg">{repo.stars !== null ? repo.stars.toLocaleString('en-US') : '—'}</p>
+			<p class="mt-1 text-xs text-fg-muted">GitHub stars</p>
+		</div>
+	</div>
+</section>
+
+<style>
+	.hero-glow {
+		animation: hero-glow-drift 14s ease-in-out infinite;
+	}
+
+	@keyframes hero-glow-drift {
+		0%,
+		100% {
+			transform: translate(-50%, 0) scale(1);
+		}
+		50% {
+			transform: translate(-38%, 8%) scale(1.3);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hero-glow {
+			animation: none;
+		}
+	}
+</style>
+
+{/* Import-free on purpose: Astro only inlines scripts that have no imports, and this
+above-the-fold logic shouldn't wait on a chunk fetch. */}
+<script>
+	// Android reports "Linux" in its UA too, and must not get the desktop build.
+	const ua = navigator.userAgent;
+	const isLinux = /Linux/.test(ua) && !/Android/.test(ua);
+
+	// Point the primary CTA at the Linux build when that's what the visitor is running.
+	const link = document.getElementById('hero-download') as HTMLAnchorElement | null;
+	const label = document.getElementById('hero-download-label');
+
+	if (link && isLinux && link.dataset.linux) {
+		link.href = link.dataset.linux;
+		if (label) label.textContent = 'Download for Linux';
+	}
+
+	// Swap the screenshot for the variant matching the active theme.
+	const heroImage = document.getElementById('hero-image') as HTMLImageElement | null;
+
+	function applyHeroImageTheme() {
+		if (!heroImage) return;
+		const theme = document.documentElement.getAttribute('data-theme');
+		const next = theme === 'light' ? heroImage.dataset.srcLight : heroImage.dataset.srcDark;
+		if (next && !heroImage.src.endsWith(next)) {
+			heroImage.src = next;
+		}
+	}
+
+	applyHeroImageTheme();
+	window.addEventListener('themechange', applyHeroImageTheme);
+</script>
+
+<script>
+	import { gsap, prefersReducedMotion } from '../lib/motion';
+
+	const lines = gsap.utils.toArray<HTMLElement>('.hero-line');
+	const fades = gsap.utils.toArray<HTMLElement>('.hero-fade');
+	const visual = document.querySelector<HTMLElement>('.hero-visual');
+
+	if (prefersReducedMotion()) {
+		gsap.set([...lines, ...fades], { opacity: 1, y: 0, filter: 'blur(0px)' });
+		if (visual) gsap.set(visual, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' });
+	} else {
+		gsap.set(lines, { yPercent: 130, rotate: 3 });
+		gsap.set(fades, { opacity: 0, y: 14, filter: 'blur(6px)' });
+
+		const tl = gsap
+			.timeline({ defaults: { ease: 'expo.out' } })
+			.to(lines, { yPercent: 0, rotate: 0, duration: 1.1, stagger: 0.1 })
+			.to(fades, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.8, stagger: 0.12 }, '-=0.6');
+
+		if (visual) {
+			gsap.set(visual, { opacity: 0, y: 48, scale: 0.96, filter: 'blur(10px)' });
+			tl.to(visual, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 1 }, '-=0.5');
+
+			const parallax = visual.querySelector<HTMLElement>('.hero-visual-parallax');
+			if (parallax) {
+				gsap.to(parallax, {
+					y: -32,
+					ease: 'none',
+					scrollTrigger: { trigger: visual, start: 'top top', end: 'bottom top', scrub: true },
+				});
+			}
+		}
+	}
+</script>

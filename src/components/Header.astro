@@ -1,0 +1,31 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+import { REPO_URL } from '../lib/github';
+---
+
+<header class="sticky top-0 z-50 border-b border-border bg-canvas/80 backdrop-blur-sm">
+	<div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+		<a href="#top" class="flex items-center gap-2 font-mono text-sm tracking-tight text-fg">
+			NextTabletDriver
+		</a>
+
+		<nav class="hidden items-center gap-8 text-sm text-fg-muted md:flex">
+			<a href="#mapper" class="transition-colors hover:text-fg">Precision</a>
+			<a href="#features" class="transition-colors hover:text-fg">Features</a>
+			<a href="#tablets" class="transition-colors hover:text-fg">Tablets</a>
+			<a href="#download" class="transition-colors hover:text-fg">Download</a>
+		</nav>
+
+		<div class="flex items-center gap-3">
+			<a
+				href={REPO_URL}
+				target="_blank"
+				rel="noreferrer"
+				class="hidden text-sm text-fg-muted transition-colors hover:text-fg sm:block"
+			>
+				GitHub
+			</a>
+			<ThemeToggle />
+		</div>
+	</div>
+</header>

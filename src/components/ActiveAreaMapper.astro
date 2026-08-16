@@ -1,0 +1,132 @@
+<section id="mapper" class="px-6 py-24">
+	<div class="mx-auto max-w-3xl text-center">
+		<p class="font-mono text-xs tracking-widest text-fg-muted uppercase" data-reveal>Precision</p>
+		<h2 class="font-display mt-4 text-3xl font-medium tracking-tight text-fg sm:text-4xl" data-reveal>
+			Map the active area to the pixel.
+		</h2>
+		<p class="mx-auto mt-4 max-w-xl text-fg-muted" data-reveal>
+			Taken straight from the app: the full tablet surface in blue, the configured active area in
+			pink. Drag to reposition, pull the corner to resize.
+		</p>
+	</div>
+
+	<div class="mx-auto mt-12 max-w-xl" data-reveal>
+		<div class="mb-4 flex items-center justify-center gap-6 font-mono text-xs text-fg-muted">
+			<span class="flex items-center gap-2">
+				<span class="h-2 w-2 rounded-sm border border-mapper-display"></span>
+				Tablet surface
+			</span>
+			<span class="flex items-center gap-2">
+				<span class="h-2 w-2 rounded-sm bg-mapper-area"></span>
+				Active area
+			</span>
+		</div>
+
+		<div
+			id="mapper-stage"
+			class="relative aspect-[16/10] w-full touch-none overflow-hidden rounded-2xl border-2 border-mapper-display bg-mapper-display/[0.06]"
+			style="background-image: linear-gradient(to right, var(--color-border) 1px, transparent 1px), linear-gradient(to bottom, var(--color-border) 1px, transparent 1px); background-size: 12.5% 12.5%; background-position: -1px -1px;"
+		>
+			<div
+				id="mapper-area"
+				class="absolute rounded-md border-2 border-mapper-area bg-mapper-area/15"
+				style="left: 12.96%; top: 12.96%; width: 74.07%; height: 74.07%;"
+			>
+				<div
+					id="mapper-handle"
+					class="absolute -right-2 -bottom-2 h-4 w-4 touch-none rounded-full border-2 border-mapper-area bg-canvas"
+					style="cursor: nwse-resize;"
+				>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<script>
+	import { Draggable } from 'gsap/Draggable';
+	import { gsap, ScrollTrigger, prefersReducedMotion } from '../lib/motion';
+
+	gsap.registerPlugin(Draggable);
+
+	const MM_W = 216;
+	const MM_H = 135;
+	const MIN_W = 40;
+	const MIN_H = 25;
+
+	const stage = document.getElementById('mapper-stage');
+	const area = document.getElementById('mapper-area');
+	const handle = document.getElementById('mapper-handle');
+
+	if (stage && area && handle) {
+		const rect = { x: 28, y: 17.5, w: 160, h: 100 };
+
+		const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+		const scale = () => stage.getBoundingClientRect().width / MM_W;
+
+		function applyRect() {
+			const s = scale();
+			area!.style.left = `${rect.x * s}px`;
+			area!.style.top = `${rect.y * s}px`;
+			area!.style.width = `${rect.w * s}px`;
+			area!.style.height = `${rect.h * s}px`;
+		}
+
+		applyRect();
+
+		Draggable.create(area, {
+			type: 'left,top',
+			bounds: stage,
+			onDrag() {
+				const s = scale();
+				rect.x = area.offsetLeft / s;
+				rect.y = area.offsetTop / s;
+			},
+		});
+
+		let resizing = false;
+		let startPointer = { x: 0, y: 0 };
+		let startSize = { w: 0, h: 0 };
+
+		handle.addEventListener('pointerdown', (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			resizing = true;
+			startPointer = { x: event.clientX, y: event.clientY };
+			startSize = { w: rect.w, h: rect.h };
+		});
+
+		window.addEventListener('pointermove', (event) => {
+			if (!resizing) return;
+			const s = scale();
+			const dxMm = (event.clientX - startPointer.x) / s;
+			const dyMm = (event.clientY - startPointer.y) / s;
+			rect.w = clamp(startSize.w + dxMm, MIN_W, MM_W - rect.x);
+			rect.h = clamp(startSize.h + dyMm, MIN_H, MM_H - rect.y);
+			applyRect();
+		});
+
+		window.addEventListener('pointerup', () => {
+			resizing = false;
+		});
+
+		window.addEventListener('resize', applyRect);
+
+		if (!prefersReducedMotion()) {
+			gsap.set(stage, { clipPath: 'inset(0 100% 0 0)' });
+			gsap.set(area, { scale: 0, opacity: 0 });
+
+			ScrollTrigger.create({
+				trigger: stage,
+				start: 'top 80%',
+				once: true,
+				onEnter: () => {
+					gsap
+						.timeline({ defaults: { ease: 'power3.out' } })
+						.to(stage, { clipPath: 'inset(0 0% 0 0)', duration: 0.9 })
+						.to(area, { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(2.2)' }, '-=0.25');
+				},
+			});
+		}
+	}
+</script>
